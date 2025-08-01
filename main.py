@@ -1,15 +1,19 @@
 import cv2
 import numpy as np
 from hand_tracker import get_fingertip, track_fingertip_motion
-from utils import draw_fingertip
+from utils import draw_fingertip, fft_ripple
 
 cap = cv2.VideoCapture(0)
 
 prev_gray = None
 prev_point = None
 tap_in_progress = False
-tap_marker = None
-tap_timer = 0
+ripples = []
+
+# Constants
+MAX_AGE = 60  #frames
+RIPPLE_SIZE = 500  #FFT patch size
+TINT_COLOR = np.array([0, 0, 255], dtype=np.float32)  #red colored glow
 
 while True:
     ret, frame = cap.read()
@@ -36,16 +40,41 @@ while True:
 
         if tap_detected:
             print("Tap Detected!")
-            tap_marker = tip
-            tap_timer = 90  # 3 sec
+            ripples.append((tip, 0))  #in format (position, age)
 
         prev_point = current_point
         prev_gray = gray.copy()
 
-    #draw a circle if tap was recently detected
-    if tap_timer > 0 and tap_marker:
-        cv2.circle(frame, tap_marker, 40, (0, 0, 255), 3)
-        tap_timer -= 1
+    #render riipples
+    ripple_mask = np.zeros_like(frame, dtype=np.float32)
+    updated_ripples = []
+
+    for (center, age) in ripples:
+        intensity = max(0, (1 - age / MAX_AGE) ** 2)
+        if intensity <= 0:
+            continue
+
+        ripple = fft_ripple(wave_freq=0.015 + age * 0.002, size=RIPPLE_SIZE)
+        h, w = ripple.shape
+        cx, cy = center
+        x1, x2 = cx - w // 2, cx + w // 2
+        y1, y2 = cy - h // 2, cy + h // 2
+
+        #if ripple goes out of bounds
+        if x1 < 0 or y1 < 0 or x2 > frame.shape[1] or y2 > frame.shape[0]:
+            continue
+
+        #color tint (this is for testing mostly)
+        colored = np.stack([ripple * c for c in TINT_COLOR], axis=-1)
+        ripple_mask[y1:y2, x1:x2] += colored * intensity
+
+        updated_ripples.append((center, age + 1))
+
+    ripples = updated_ripples
+
+    # Blend ripple with base frame
+    ripple_mask = np.clip(ripple_mask, 0, 255).astype(np.uint8)
+    frame = cv2.add(frame, ripple_mask)
 
     cv2.imshow("phantom-touch", frame)
     if cv2.waitKey(1) == ord('q'):
