@@ -21,3 +21,27 @@ def get_fingertip(frame):
 
 
 
+def track_fingertip_motion(prev_gray, gray, prev_point, current_point, tap_in_progress):
+    tap_detected = False
+    next_point = None
+
+    if prev_gray is not None and prev_point is not None:
+        next_point, status, _ = cv2.calcOpticalFlowPyrLK(
+            prev_gray, gray, prev_point, None,
+            winSize=(50, 50),
+            maxLevel=2,
+            criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03)
+        )
+
+        if status[0][0] == 1:
+            x1, y1 = prev_point[0][0]
+            x2, y2 = next_point[0][0]
+            velocity = np.hypot(x2 - x1, y2 - y1)
+
+            if velocity > 20:
+                tap_in_progress = True
+            elif tap_in_progress and velocity < 3:
+                tap_detected = True
+                tap_in_progress = False
+
+    return next_point, tap_detected, tap_in_progress
