@@ -54,7 +54,7 @@ while True:
         if intensity <= 0:
             continue
 
-        ripple = fft_ripple(wave_freq=0.015 + age * 0.002, size=RIPPLE_SIZE)
+        ripple = fft_ripple(wave_freq=0.015 + age * 0.002, size=RIPPLE_SIZE, phase=0.3)
         h, w = ripple.shape
         cx, cy = center
         x1, x2 = cx - w // 2, cx + w // 2
