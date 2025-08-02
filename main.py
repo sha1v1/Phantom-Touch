@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from hand_tracker import get_fingertip, track_fingertip_motion
-from utils import draw_fingertip, fft_ripple
+from utils import draw_fingertip, fft_ripple, detect_edges_near_tip
 
 cap = cv2.VideoCapture(0)
 
@@ -17,22 +17,33 @@ while True:
 
     frame = cv2.flip(frame, 1)  #mirror image (for testing)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
     tip, _ = get_fingertip(frame)
 
-    if tip:
-        draw_fingertip(frame, tip)
-        current_point = np.array([[tip]], dtype=np.float32)
+    if tip is not None:
+        edge_strength, edge_patch, (ex, ey) = detect_edges_near_tip(gray, tip)
 
-        next_point, tap_detected, tap_in_progress = track_fingertip_motion( prev_gray, gray, prev_point, current_point, tap_in_progress)
+        if edge_strength > 50:
+            print("Fingertip visible")
+            draw_fingertip(frame, tip)
+            cv2.imshow("Edges around fingertip", edge_patch)
+            cv2.rectangle(frame, (ex, ey), (ex + 50, ey + 50), (255, 255, 0), 1)
 
-        if tap_detected:
-            print("Tap Detected!")
-            ripples.append((tip, 0))  #add new ripple at this location
-            if len(ripples) > 3:
-                ripples.pop(0)
+            current_point = np.array([[tip]], dtype=np.float32)
+            next_point, tap_detected, tap_in_progress = track_fingertip_motion(prev_gray, gray, prev_point, current_point, tap_in_progress)
 
-        prev_point = current_point
-        prev_gray = gray.copy()
+            if tap_detected and edge_strength > 100:
+                print("Tap Detected!")
+                ripples.append((tip, 0))
+                if len(ripples) > 3:
+                    ripples.pop(0)
+
+            prev_point = current_point
+            prev_gray = gray.copy()
+        else:
+            print("Fingertip hidden or weak (low edge strength)")
+    else:
+        print("Fingertip not detected")
 
     #apply and update ripple effects
     ripple_frame = frame.copy()

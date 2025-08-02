@@ -5,6 +5,23 @@ def draw_fingertip(frame, point, color=(0, 0, 255)):
     if point:
         cv2.circle(frame, point, 8, color, -1)
 
+def detect_edges_near_tip(gray, tip, size=25):
+    x, y = tip
+    h, w = gray.shape
+
+    x1 = max(0, x - size)
+    y1 = max(0, y - size)
+    x2 = min(w, x + size)
+    y2 = min(h, y + size)
+
+    patch = gray[y1:y2, x1:x2]
+    edges = cv2.Canny(patch, 50, 150)
+
+    #count edge pixels
+    edge_strength = np.count_nonzero(edges)
+
+    return edge_strength, edges, (x1, y1)
+
 
 def fft_ripple(frame, center, age):
     h, w = frame.shape[:2]
