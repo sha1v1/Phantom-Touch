@@ -26,7 +26,7 @@ while True:
         if edge_strength > 50:
             print("Fingertip visible")
             draw_fingertip(frame, tip)
-            cv2.imshow("Edges around fingertip", edge_patch)
+            # cv2.imshow("Edges around fingertip", edge_patch)
             cv2.rectangle(frame, (ex, ey), (ex + 50, ey + 50), (255, 255, 0), 1)
 
             current_point = np.array([[tip]], dtype=np.float32)
