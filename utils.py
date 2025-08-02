@@ -13,17 +13,29 @@ def fft_ripple(frame, center, age):
     dy = Y - center[1]
     dist = np.sqrt(dx**2 + dy**2)
 
+    max_age = 50
+
     # parameters
-    wave_speed = 3.0
-    decay = 0.03
-    freq = 0.3
+    t = age / max_age
 
-    offset = np.sin(dist * freq - age * wave_speed) * np.exp(-dist * decay) * 8
+    #the ripples fade out progressively, hence the changing prarams
+    base_freq = 0.03         #for wider ripple spacing
+    base_amplitude = 25      #max distortion
 
-    # apply displacement
-    map_x = (X + dx / dist * offset).astype(np.float32)
-    map_y = (Y + dy / dist * offset).astype(np.float32)
+    freq = base_freq * (1 - t + 0.3)      
+    amplitude = base_amplitude * t        
+    decay = 0.01
+    wave_speed = 2.0
+
+    ripple = np.sin(dist * freq - age * wave_speed)
+    offset = ripple * np.exp(-dist * decay) * amplitude
+
+    #direction of displacement (normalized)
+    dx_norm = dx / dist
+    dy_norm = dy / dist
+
+    map_x = (X + dx_norm * offset).astype(np.float32)
+    map_y = (Y + dy_norm * offset).astype(np.float32)
 
     displaced = cv2.remap(frame, map_x, map_y, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
-
     return displaced

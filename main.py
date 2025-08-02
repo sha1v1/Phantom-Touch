@@ -28,6 +28,8 @@ while True:
         if tap_detected:
             print("Tap Detected!")
             ripples.append((tip, 0))  #add new ripple at this location
+            if len(ripples) > 3:
+                ripples.pop(0)
 
         prev_point = current_point
         prev_gray = gray.copy()
@@ -36,7 +38,7 @@ while True:
     ripple_frame = frame.copy()
     updated_ripples = []
     for center, age in ripples:
-        if age < 30:  # ripple lasts ~1 sec
+        if age < 15:  
             ripple_frame = fft_ripple(ripple_frame, center, age)
             updated_ripples.append((center, age + 1))
     ripples = updated_ripples
