@@ -28,14 +28,22 @@ def fft_ripple(frame, center, age):
     wave_speed = 2.0
 
     ripple = np.sin(dist * freq - age * wave_speed)
-    offset = ripple * np.exp(-dist * decay) * amplitude
+    base_offset = ripple * np.exp(-dist * decay)
 
-    #direction of displacement (normalized)
-    dx_norm = dx / dist
-    dy_norm = dy / dist
+    #gaussian envelope
+    sigma = 80  #wider=smoother ripple
+    gaussian = np.exp(-(dx**2 + dy**2) / (2 * sigma**2))
+
+    #apply gaussian modulated offset
+    offset = base_offset * gaussian * amplitude
+
+    #directin of displacement (normalized)
+    dx_norm = dx / (dist + 1e-5)
+    dy_norm = dy / (dist + 1e-5)
 
     map_x = (X + dx_norm * offset).astype(np.float32)
     map_y = (Y + dy_norm * offset).astype(np.float32)
 
+    #warp
     displaced = cv2.remap(frame, map_x, map_y, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
     return displaced
