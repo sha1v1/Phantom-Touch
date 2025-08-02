@@ -63,4 +63,18 @@ def fft_ripple(frame, center, age):
 
     #warp
     displaced = cv2.remap(frame, map_x, map_y, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
-    return displaced
+ 
+
+    #create a colored halo around the ripple
+    color_mask = np.abs(ripple) * gaussian * 255 * t
+    color_mask = np.clip(color_mask, 0, 255).astype(np.uint8)
+
+    #create rgb halo
+    color_ripple = np.zeros_like(frame)
+    color_ripple[:, :, 0] = color_mask            #blue channel
+    color_ripple[:, :, 1] = color_mask // 2       #teal 
+
+    #overlay color ripple onto distorted image
+    colored_ripple = cv2.addWeighted(displaced, 1.0, color_ripple, 0.4, 0)
+
+    return colored_ripple
