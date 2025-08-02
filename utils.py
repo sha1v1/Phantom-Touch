@@ -19,8 +19,8 @@ def fft_ripple(frame, center, age):
     t = age / max_age
 
     #the ripples fade out progressively, hence the changing prarams
-    base_freq = 0.03         #for wider ripple spacing
-    base_amplitude = 25      #max distortion
+    base_freq = 0.01         #for wider ripple spacing
+    base_amplitude = 50      #max distortion
 
     freq = base_freq * (1 - t + 0.3)      
     amplitude = base_amplitude * t        
