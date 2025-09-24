@@ -13,19 +13,8 @@ Python version: 3.12
     ```
 
 ### How to run 
-If you have a video input file:
-```
-python3 phantom-touch.py <input_file.mp4>
-```
-This will result in an output file named **output.mp4**. In case the filter does not work as expected, try out the live version below.
 
 To run this live, **make sure your bluetooth is turned off**:
 ```
 python3 phantom-touch-live.py
 ```
-
-### Guide to the files
-1. **demo.mp4**: Demo and explanation of the filter
-2. **phantom-touch.py**: The file to be used when testing using an input file
-3. **phantom-touch_live.py**: The file to be used when testing using live video
-4. **input.mp4 and output.mpr**: Record of my runs. 
